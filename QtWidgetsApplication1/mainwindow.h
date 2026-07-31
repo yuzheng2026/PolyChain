@@ -1,4 +1,3 @@
-#pragma once
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -14,16 +13,12 @@
 #include "blockchainview.h"
 #include "wallet.h"
 #include "p2pnetwork.h"
-#include <map>
-#include <string>
-#include <utility>
-#include <vector>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
-
 public:
-    explicit MainWindow(QWidget* parent = nullptr);
+    quint16 myPort;
+    explicit MainWindow(quint16 listenPort = 12345, QWidget* parent = nullptr);
     ~MainWindow() {}
 
 private slots:
@@ -32,9 +27,14 @@ private slots:
     void mineBlock();
     void stakeCoins();
     void unstakeCoins();
-    void mintNFT();                 // NFT 铸造
-    void connectToPeerDialog();     // P2P 连接
-    void onBlockReceived(const Block& block); // 收到远程区块
+    void mintNFT();
+    void transferNFT();
+    void connectToPeerDialog();
+    void publishZKPTask();
+    void onBlockReceived(const Block& block);
+    void onTransactionReceived(const Transaction& tx);
+    void onChainReceived(const std::vector<Block>& chain);
+    void onStatusMessage(const QString& msg);
 
 private:
     void refreshDisplay();
@@ -42,32 +42,22 @@ private:
     std::string nameToAddress(const std::string& name) const;
     std::string addressToName(const std::string& addr) const;
 
-    // UI
-    QLineEdit* senderInput;
-    QLineEdit* receiverInput;
-    QLineEdit* amountInput;
+    QLineEdit* senderInput, * receiverInput, * amountInput, * stakeInput;
     BlockchainView* blockView;
     QScrollArea* scrollArea;
-    QListWidget* balanceList;
+    QListWidget* balanceList, * zkpTaskList;
     QSlider* difficultySlider;
-    QLabel* difficultyLabel;
-    QLabel* totalSupplyLabel;
-    QLabel* burnedLabel;
-    QLineEdit* stakeInput;
-    QLabel* stakeInfoLabel;
-    QPushButton* stakeBtn;
-    QPushButton* unstakeBtn;
-    QPushButton* mineBtn;
-    QPushButton* mintBtn;
-    QPushButton* connectBtn;
-    QLabel* minerAddressLabel;
+    QLabel* difficultyLabel, * totalSupplyLabel, * burnedLabel, * stakeInfoLabel;
+    QLabel* minerAddressLabel, * p2pStatusLabel;
+    QLabel* forkInfoLabel;
+    QPushButton* stakeBtn, * unstakeBtn, * mineBtn, * mintBtn, * transferNFTBtn;
+    QPushButton* connectBtn, * zkpTaskBtn;
 
     Blockchain      bc;
     Wallet          aliceWallet, bobWallet, eveWallet, youWallet;
     P2PNetwork* p2p;
 
-    std::map<std::string, std::string> nameToAddr;
-    std::map<std::string, std::string> addrToName;
+    std::map<std::string, std::string> nameToAddr, addrToName;
     std::map<std::string, Wallet*> nameToWallet;
 };
 

@@ -1,3 +1,4 @@
+// mainwindow.cpp — 最终完整版（所有功能集成）
 #include "mainwindow.h"
 #include <QApplication>
 #include <QDateTime>
@@ -10,13 +11,16 @@
 #include <QScrollBar>
 #include <QScrollArea>
 #include <QInputDialog>
+#include <QDebug>
 #include <chrono>
 #include <map>
 #include <string>
 #include <sstream>
+#include <cstdlib>
 
 // ==================== 构造函数 ====================
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent),
+MainWindow::MainWindow(quint16 listenPort, QWidget* parent) : QMainWindow(parent),
+myPort(listenPort),
 aliceWallet(), bobWallet(), eveWallet(), youWallet()
 {
     // ---------- 钱包映射 ----------
@@ -41,14 +45,17 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
 
     // ---------- P2P 网络 ----------
     p2p = new P2PNetwork(&bc, this);
-    p2p->startServer(12345);
+    p2p->startServer(myPort);
     connect(p2p, &P2PNetwork::blockReceived, this, &MainWindow::onBlockReceived);
+    connect(p2p, &P2PNetwork::transactionReceived, this, &MainWindow::onTransactionReceived);
+    connect(p2p, &P2PNetwork::chainReceived, this, &MainWindow::onChainReceived);
+    connect(p2p, &P2PNetwork::statusMessage, this, &MainWindow::onStatusMessage);
 
     // ---------- 窗口基本设置 ----------
-    setWindowTitle("Blockchain Simulator 2026 — PolyAVX");
+    setWindowTitle(QString("Blockchain Simulator 2026 — PolyAVX (Port %1)").arg(myPort));
     resize(950, 680);
 
-    // ---------- 全局暗色主题 ----------
+    // 暗色主题
     QPalette darkPalette;
     darkPalette.setColor(QPalette::Window, QColor(20, 20, 20));
     darkPalette.setColor(QPalette::WindowText, QColor(220, 220, 220));
@@ -60,7 +67,6 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     darkPalette.setColor(QPalette::HighlightedText, Qt::white);
     QApplication::setPalette(darkPalette);
 
-    // ---------- 主分割器 ----------
     QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
     setCentralWidget(splitter);
 
@@ -69,12 +75,10 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     leftCard->setFrameShape(QFrame::StyledPanel);
     leftCard->setStyleSheet("QFrame { background-color: #1e1e1e; border-radius: 8px; padding: 4px; }");
     QVBoxLayout* leftLayout = new QVBoxLayout(leftCard);
-
     QLabel* titleLabel = new QLabel("BLOCKCHAIN LEDGER");
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #58a6ff; padding: 4px;");
     leftLayout->addWidget(titleLabel);
-
     scrollArea = new QScrollArea;
     scrollArea->setWidgetResizable(false);
     scrollArea->setStyleSheet("QScrollArea { background-color: #141414; border: none; }");
@@ -95,7 +99,6 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     QVBoxLayout* rightLayout = new QVBoxLayout(rightCard);
     rightLayout->setSpacing(12);
 
-    // 标题
     QLabel* panelTitle = new QLabel("NEW TRANSACTION");
     panelTitle->setAlignment(Qt::AlignCenter);
     panelTitle->setStyleSheet("font-size: 14px; font-weight: bold; color: #58a6ff; margin-bottom: 8px;");
@@ -106,32 +109,19 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     minerAddressLabel->setStyleSheet("font-size: 9px; color: #8b949e;");
     rightLayout->addWidget(minerAddressLabel);
 
-    // 发送方
-    QLabel* senderLabel = new QLabel("SENDER");
-    senderLabel->setStyleSheet("font-size: 10px; color: #8b949e; letter-spacing: 1px;");
-    rightLayout->addWidget(senderLabel);
-    senderInput = new QLineEdit;
-    senderInput->setPlaceholderText("ALICE / BOB / EVE / YOU");
-    senderInput->setStyleSheet(inputStyle());
-    rightLayout->addWidget(senderInput);
-
-    // 接收方
-    QLabel* recvLabel = new QLabel("RECEIVER");
-    recvLabel->setStyleSheet("font-size: 10px; color: #8b949e; letter-spacing: 1px;");
-    rightLayout->addWidget(recvLabel);
-    receiverInput = new QLineEdit;
-    receiverInput->setPlaceholderText("ALICE / BOB / EVE / YOU");
-    receiverInput->setStyleSheet(inputStyle());
-    rightLayout->addWidget(receiverInput);
-
-    // 金额
-    QLabel* amtLabel = new QLabel("AMOUNT");
-    amtLabel->setStyleSheet("font-size: 10px; color: #8b949e; letter-spacing: 1px;");
-    rightLayout->addWidget(amtLabel);
-    amountInput = new QLineEdit;
-    amountInput->setPlaceholderText("10.0");
-    amountInput->setStyleSheet(inputStyle());
-    rightLayout->addWidget(amountInput);
+    // 输入框辅助 lambda
+    auto addInput = [&](const char* label, QLineEdit*& input, const char* placeholder) {
+        QLabel* lbl = new QLabel(label);
+        lbl->setStyleSheet("font-size: 10px; color: #8b949e; letter-spacing: 1px;");
+        rightLayout->addWidget(lbl);
+        input = new QLineEdit;
+        input->setPlaceholderText(placeholder);
+        input->setStyleSheet(inputStyle());
+        rightLayout->addWidget(input);
+        };
+    addInput("SENDER", senderInput, "ALICE / BOB / EVE / YOU");
+    addInput("RECEIVER", receiverInput, "ALICE / BOB / EVE / YOU");
+    addInput("AMOUNT", amountInput, "10.0");
 
     rightLayout->addSpacing(8);
 
@@ -141,48 +131,58 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     sendBtn->setStyleSheet(
         "QPushButton { background-color: #238636; color: white; border: none;"
         "border-radius: 6px; padding: 12px 24px; font-size: 13px; font-weight: bold; }"
-        "QPushButton:hover { background-color: #2ea043; }"
-        "QPushButton:pressed { background-color: #196c2e; }");
+        "QPushButton:hover { background-color: #2ea043; }");
     connect(sendBtn, &QPushButton::clicked, this, &MainWindow::sendTransaction);
     rightLayout->addWidget(sendBtn);
 
     // 挖矿按钮
-    rightLayout->addSpacing(8);
     mineBtn = new QPushButton("MINE NEW BLOCK");
     mineBtn->setCursor(Qt::PointingHandCursor);
     mineBtn->setStyleSheet(
         "QPushButton { background-color: #1f6feb; color: white; border: none;"
         "border-radius: 6px; padding: 12px 24px; font-size: 13px; font-weight: bold; }"
-        "QPushButton:hover { background-color: #388bfd; }"
-        "QPushButton:pressed { background-color: #1559b0; }");
+        "QPushButton:hover { background-color: #388bfd; }");
     connect(mineBtn, &QPushButton::clicked, this, &MainWindow::mineBlock);
     rightLayout->addWidget(mineBtn);
 
-    // NFT 铸造按钮
-    rightLayout->addSpacing(8);
+    // NFT 铸造
     mintBtn = new QPushButton("MINT NFT");
     mintBtn->setCursor(Qt::PointingHandCursor);
     mintBtn->setStyleSheet(
         "QPushButton { background-color: #bf5b00; color: white; border: none;"
         "border-radius: 6px; padding: 12px 24px; font-size: 13px; font-weight: bold; }"
-        "QPushButton:hover { background-color: #d97a00; }"
-        "QPushButton:pressed { background-color: #8a4200; }");
+        "QPushButton:hover { background-color: #d97a00; }");
     connect(mintBtn, &QPushButton::clicked, this, &MainWindow::mintNFT);
     rightLayout->addWidget(mintBtn);
 
-    // P2P 连接按钮
-    rightLayout->addSpacing(8);
+    // NFT 转移
+    transferNFTBtn = new QPushButton("TRANSFER NFT");
+    transferNFTBtn->setCursor(Qt::PointingHandCursor);
+    transferNFTBtn->setStyleSheet(
+        "QPushButton { background-color: #8b5cf6; color: white; border: none;"
+        "border-radius: 6px; padding: 12px 24px; font-size: 13px; font-weight: bold; }"
+        "QPushButton:hover { background-color: #a78bfa; }");
+    connect(transferNFTBtn, &QPushButton::clicked, this, &MainWindow::transferNFT);
+    rightLayout->addWidget(transferNFTBtn);
+
+    // P2P 连接
     connectBtn = new QPushButton("CONNECT TO PEER");
     connectBtn->setCursor(Qt::PointingHandCursor);
     connectBtn->setStyleSheet(
         "QPushButton { background-color: #6e40c9; color: white; border: none;"
         "border-radius: 6px; padding: 12px 24px; font-size: 13px; font-weight: bold; }"
-        "QPushButton:hover { background-color: #8957e5; }"
-        "QPushButton:pressed { background-color: #4a2d8a; }");
+        "QPushButton:hover { background-color: #8957e5; }");
     connect(connectBtn, &QPushButton::clicked, this, &MainWindow::connectToPeerDialog);
     rightLayout->addWidget(connectBtn);
 
-    // ---------- 难度调节 ----------
+    // P2P 状态
+    p2pStatusLabel = new QLabel("P2P: Not connected to any peer");
+    p2pStatusLabel->setStyleSheet("font-size: 9px; color: #8b949e; padding: 4px;");
+    rightLayout->addWidget(p2pStatusLabel);
+    forkInfoLabel = new QLabel("Forks: 0 | Main chain: 1 blocks");
+    forkInfoLabel->setStyleSheet("font-size: 9px; color: #58a6ff; padding: 2px;");
+    rightLayout->addWidget(forkInfoLabel);
+    // 难度滑块
     rightLayout->addSpacing(16);
     QLabel* diffTitle = new QLabel("MINING DIFFICULTY");
     diffTitle->setAlignment(Qt::AlignCenter);
@@ -201,7 +201,7 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     connect(difficultySlider, &QSlider::valueChanged, this, &MainWindow::onDifficultyChanged);
     rightLayout->addWidget(difficultySlider);
 
-    // ---------- 质押面板 ----------
+    // 质押面板
     rightLayout->addSpacing(16);
     QLabel* stakeTitle = new QLabel("STAKING (PoS)");
     stakeTitle->setAlignment(Qt::AlignCenter);
@@ -211,10 +211,7 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     stakeInfoLabel->setAlignment(Qt::AlignCenter);
     stakeInfoLabel->setStyleSheet("font-size: 11px; color: #3fb950;");
     rightLayout->addWidget(stakeInfoLabel);
-    stakeInput = new QLineEdit;
-    stakeInput->setPlaceholderText("Amount to stake");
-    stakeInput->setStyleSheet(inputStyle());
-    rightLayout->addWidget(stakeInput);
+    addInput("Amount to stake", stakeInput, "0.0");
     stakeBtn = new QPushButton("STAKE");
     stakeBtn->setStyleSheet(
         "QPushButton { background-color: #1f6feb; color: white; border: none;"
@@ -230,7 +227,7 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     connect(unstakeBtn, &QPushButton::clicked, this, &MainWindow::unstakeCoins);
     rightLayout->addWidget(unstakeBtn);
 
-    // ---------- 余额面板 ----------
+    // 余额面板
     rightLayout->addSpacing(16);
     QLabel* balanceTitle = new QLabel("ACCOUNT BALANCES");
     balanceTitle->setAlignment(Qt::AlignCenter);
@@ -251,18 +248,34 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
     burnedLabel->setStyleSheet("font-size: 10px; color: #f85149; margin-top: 8px;");
     rightLayout->addWidget(burnedLabel);
 
-    rightLayout->addStretch();
+    // ZKP 任务面板
+    rightLayout->addSpacing(16);
+    QLabel* zkpTitle = new QLabel("ZKP COMPUTE TASKS");
+    zkpTitle->setAlignment(Qt::AlignCenter);
+    zkpTitle->setStyleSheet("font-size: 10px; color: #8b949e; letter-spacing: 1px;");
+    rightLayout->addWidget(zkpTitle);
+    zkpTaskList = new QListWidget;
+    zkpTaskList->setStyleSheet("QListWidget { background-color: #0d1117; border: 1px solid #30363d;"
+        "border-radius: 4px; color: #c9d1d9; font-size: 11px; }");
+    zkpTaskList->setMaximumHeight(100);
+    rightLayout->addWidget(zkpTaskList);
+    zkpTaskBtn = new QPushButton("PUBLISH ZKP TASK");
+    zkpTaskBtn->setStyleSheet(
+        "QPushButton { background-color: #7c3aed; color: white; border: none;"
+        "border-radius: 6px; padding: 10px; font-size: 12px; font-weight: bold; }"
+        "QPushButton:hover { background-color: #a78bfa; }");
+    connect(zkpTaskBtn, &QPushButton::clicked, this, &MainWindow::publishZKPTask);
+    rightLayout->addWidget(zkpTaskBtn);
 
-    // 将右侧卡片放入滚动区域
+    rightLayout->addStretch();
     rightScroll->setWidget(rightCard);
     splitter->addWidget(rightScroll);
     splitter->setSizes({ 750, 200 });
 
-    // ---------- 初始刷新 ----------
     refreshDisplay();
 }
 
-// ==================== 发送交易（含签名） ====================
+// ==================== 交易发送 ====================
 void MainWindow::sendTransaction() {
     QString s = senderInput->text().trimmed();
     QString r = receiverInput->text().trimmed();
@@ -274,15 +287,12 @@ void MainWindow::sendTransaction() {
     }
     std::string senderName = s.toStdString();
     std::string recvName = r.toStdString();
-    if (nameToAddr.find(senderName) == nameToAddr.end() ||
-        nameToAddr.find(recvName) == nameToAddr.end()) {
+    if (nameToAddr.find(senderName) == nameToAddr.end() || nameToAddr.find(recvName) == nameToAddr.end()) {
         QMessageBox::warning(this, "Unknown Sender/Receiver", "Must be ALICE, BOB, EVE, or YOU.");
         return;
     }
 
     Transaction tx(nameToAddr[senderName], nameToAddr[recvName], a);
-
-    // 用发送方钱包签名
     Wallet* senderWallet = nameToWallet[senderName];
     tx.publicKey = senderWallet->getPublicKey();
     tx.signature = senderWallet->signData(tx.toData());
@@ -296,30 +306,20 @@ void MainWindow::sendTransaction() {
     double elapsed = std::chrono::duration<double, std::milli>(end - start).count();
 
     if (!success) {
-        QMessageBox::warning(this, "Insufficient Balance",
-            QString("%1 does not have enough balance.").arg(s));
+        QMessageBox::warning(this, "Insufficient Balance", QString("%1 does not have enough balance.").arg(s));
         return;
     }
-
-    // 广播新区块
     p2p->broadcastBlock(bc.chain.back());
     refreshDisplay();
-
-    senderInput->clear();
-    receiverInput->clear();
-    amountInput->clear();
+    senderInput->clear(); receiverInput->clear(); amountInput->clear();
 
     double gasFee = a * Blockchain::GAS_FEE_RATE;
-    QString msg = QString("Block mined!\nDifficulty: %1\nTime: %2 ms\nNonce: %3\n"
-        "GAS Fee: %4 (80% burned, 20% to miner)")
-        .arg(bc.difficulty)
-        .arg(elapsed, 0, 'f', 1)
-        .arg(bc.chain.back().nonce)
-        .arg(gasFee, 0, 'f', 4);
-    QMessageBox::information(this, "Block Added", msg);
+    QMessageBox::information(this, "Block Added",
+        QString("Block mined!\nDifficulty: %1\nTime: %2 ms\nNonce: %3\nGAS Fee: %4 (80%% burned, 20%% to miner)")
+        .arg(bc.difficulty).arg(elapsed, 0, 'f', 1).arg(bc.chain.back().nonce).arg(gasFee, 0, 'f', 4));
 }
 
-// ==================== 单独挖矿 ====================
+// ==================== 挖矿 ====================
 void MainWindow::mineBlock() {
     std::vector<Transaction> emptyTxs;
     auto start = std::chrono::steady_clock::now();
@@ -330,17 +330,11 @@ void MainWindow::mineBlock() {
         QMessageBox::warning(this, "Mining Failed", "Failed to mine a new block.");
         return;
     }
-
     p2p->broadcastBlock(bc.chain.back());
     refreshDisplay();
-
-    QString msg = QString("Block successfully mined!\nDifficulty: %1\nTime: %2 ms\n"
-        "Nonce: %3\nReward: %4 coins -> YOU")
-        .arg(bc.difficulty)
-        .arg(elapsed, 0, 'f', 1)
-        .arg(bc.chain.back().nonce)
-        .arg(Blockchain::MINING_REWARD);
-    QMessageBox::information(this, "Mining Complete", msg);
+    QMessageBox::information(this, "Mining Complete",
+        QString("Block successfully mined!\nDifficulty: %1\nTime: %2 ms\nNonce: %3\nReward: %4 coins -> YOU")
+        .arg(bc.difficulty).arg(elapsed, 0, 'f', 1).arg(bc.chain.back().nonce).arg(Blockchain::MINING_REWARD));
 }
 
 // ==================== NFT 铸造 ====================
@@ -348,24 +342,63 @@ void MainWindow::mintNFT() {
     bool ok;
     QString nftId = QInputDialog::getText(this, "Mint NFT", "NFT ID:", QLineEdit::Normal, "", &ok);
     if (!ok || nftId.isEmpty()) return;
-    QString nftData = QInputDialog::getText(this, "Mint NFT", "NFT Data (e.g., IPFS hash):", QLineEdit::Normal, "", &ok);
+    QString nftData = QInputDialog::getText(this, "Mint NFT", "NFT Data (e.g. IPFS hash):", QLineEdit::Normal, "", &ok);
     if (!ok) return;
 
     Transaction tx(youWallet.getAddress(), nftId.toStdString(), nftData.toStdString());
-    std::vector<Transaction> txs;
-    txs.push_back(tx);
+    tx.publicKey = youWallet.getPublicKey();
+    tx.signature = youWallet.signData(tx.toData());
+    std::vector<Transaction> txs; txs.push_back(tx);
 
     bool success = bc.addBlock(txs, youWallet.getAddress());
     if (!success) {
         QMessageBox::warning(this, "Error", "NFT already exists or failed.");
         return;
     }
-
     p2p->broadcastBlock(bc.chain.back());
     refreshDisplay();
+    QMessageBox::information(this, "NFT Minted", QString("NFT '%1' minted to YOU.\nData: %2").arg(nftId, nftData));
+}
 
-    QMessageBox::information(this, "NFT Minted",
-        QString("NFT '%1' minted to YOU.\nData: %2").arg(nftId, nftData));
+// ==================== NFT 转移 ====================
+void MainWindow::transferNFT() {
+    bool ok;
+    QString nftId = QInputDialog::getText(this, "Transfer NFT", "NFT ID to transfer:", QLineEdit::Normal, "", &ok);
+    if (!ok || nftId.isEmpty()) return;
+    QString recipient = QInputDialog::getText(this, "Transfer NFT", "Recipient (ALICE/BOB/EVE/YOU):", QLineEdit::Normal, "", &ok);
+    if (!ok || recipient.isEmpty()) return;
+
+    std::string nftIdStr = nftId.toStdString();
+    std::string recvName = recipient.toStdString();
+
+    auto it = bc.nftOwners.find(nftIdStr);
+    if (it == bc.nftOwners.end()) {
+        QMessageBox::warning(this, "Error", QString("NFT '%1' does not exist.").arg(nftId));
+        return;
+    }
+    if (it->second != youWallet.getAddress()) {
+        QMessageBox::warning(this, "Error", "You don't own this NFT.");
+        return;
+    }
+    if (nameToAddr.find(recvName) == nameToAddr.end()) {
+        QMessageBox::warning(this, "Error", "Unknown recipient. Must be ALICE, BOB, EVE, or YOU.");
+        return;
+    }
+
+    Transaction tx(youWallet.getAddress(), nameToAddr[recvName], nftIdStr, true);
+    tx.publicKey = youWallet.getPublicKey();
+    tx.signature = youWallet.signData(tx.toData());
+    std::vector<Transaction> txs; txs.push_back(tx);
+
+    bool success = bc.addBlock(txs, youWallet.getAddress());
+    if (!success) {
+        QMessageBox::warning(this, "Error", "Failed to transfer NFT.");
+        return;
+    }
+    p2p->broadcastBlock(bc.chain.back());
+    refreshDisplay();
+    QMessageBox::information(this, "NFT Transferred",
+        QString("NFT '%1' transferred to %2.").arg(nftId, recipient));
 }
 
 // ==================== P2P 连接 ====================
@@ -381,14 +414,25 @@ void MainWindow::connectToPeerDialog() {
 void MainWindow::onBlockReceived(const Block& block) {
     if (block.index > bc.chain.back().index) {
         QMessageBox::information(this, "New Block",
-            QString("Received block %1 from peer.\nHash: %2")
-            .arg(block.index)
-            .arg(QString::fromStdString(block.hash).left(20)));
-        // 实际项目中应验证区块并加入链
+            QString("Received block %1 from peer.\nHash: %2").arg(block.index).arg(QString::fromStdString(block.hash).left(20)));
     }
 }
 
-// ==================== 难度回调 ====================
+void MainWindow::onTransactionReceived(const Transaction& tx) {
+    QMessageBox::information(this, "New Transaction", QString("Received tx: %1").arg(QString::fromStdString(tx.toString())));
+}
+
+void MainWindow::onChainReceived(const std::vector<Block>& chain) {
+    if (chain.size() > bc.chain.size()) {
+        QMessageBox::information(this, "Chain Synced", QString("Received longer chain with %1 blocks.").arg(chain.size()));
+    }
+}
+
+void MainWindow::onStatusMessage(const QString& msg) {
+    p2pStatusLabel->setText("P2P: " + msg);
+}
+
+// ==================== 难度调节 ====================
 void MainWindow::onDifficultyChanged(int value) {
     difficultyLabel->setText(QString::number(value));
     bc.setDifficulty(value);
@@ -402,86 +446,109 @@ void MainWindow::stakeCoins() {
         QMessageBox::warning(this, "Invalid Input", "Please enter a valid amount to stake.");
         return;
     }
-    std::string youAddr = youWallet.getAddress();
-    if (!bc.stake(youAddr, amount)) {
+    if (!bc.stake(youWallet.getAddress(), amount)) {
         QMessageBox::warning(this, "Insufficient Balance", "YOU don't have enough coins to stake.");
         return;
     }
     refreshDisplay();
     stakeInput->clear();
-    QMessageBox::information(this, "Staking",
-        QString("Successfully staked %1 coins.\nYOU will earn rewards on each new block.").arg(amount));
+    QMessageBox::information(this, "Staking", QString("Successfully staked %1 coins.").arg(amount));
 }
 
 void MainWindow::unstakeCoins() {
-    std::string youAddr = youWallet.getAddress();
-    double stakedAmount = bc.stakes[youAddr];
+    double stakedAmount = bc.stakes[youWallet.getAddress()];
     if (stakedAmount <= 0) {
         QMessageBox::information(this, "No Stake", "YOU have no staked coins.");
         return;
     }
-    bc.unstake(youAddr, stakedAmount);
+    bc.unstake(youWallet.getAddress(), stakedAmount);
     refreshDisplay();
-    QMessageBox::information(this, "Unstaking",
-        QString("Successfully unstaked %1 coins.").arg(stakedAmount));
+    QMessageBox::information(this, "Unstaking", QString("Successfully unstaked %1 coins.").arg(stakedAmount));
 }
 
-// ==================== 刷新界面 ====================
+// ==================== ZKP 任务发布 ====================
+void MainWindow::publishZKPTask() {
+    QStringList functions;
+    functions << "sin" << "cos" << "exp" << "log";
+    QString funcName = functions[rand() % functions.size()];
+
+    int degree = 2 + rand() % 3;
+    std::ostringstream coeffStream;
+    for (int i = 0; i <= degree; ++i) {
+        if (i > 0) coeffStream << " ";
+        coeffStream << (1 + rand() % 5) << "." << (rand() % 10);
+    }
+    std::string inputCoeffs = coeffStream.str();
+    int terms = 5 + rand() % 6;
+
+    ZKPTask task = bc.createZKPTask(funcName.toStdString(), inputCoeffs, terms, youWallet.getAddress());
+    bool success = bc.addZKPBlock(task, youWallet.getAddress());
+    if (!success) {
+        QMessageBox::warning(this, "ZKP Failed", "Failed to verify ZKP proof.");
+        return;
+    }
+    p2p->broadcastBlock(bc.chain.back());
+    refreshDisplay();
+
+    zkpTaskList->clear();
+    for (const auto& t : bc.zkpTasks) {
+        zkpTaskList->addItem(QString("[%1] %2(%3, %4 terms)")
+            .arg(QString::fromStdString(t.taskID).left(8))
+            .arg(QString::fromStdString(t.functionName))
+            .arg(QString::fromStdString(t.inputCoeffs))
+            .arg(t.terms));
+    }
+
+    QMessageBox::information(this, "ZKP Task Completed",
+        QString("Function: %1\nInput: %2\nTerms: %3\nResult: %4...")
+        .arg(funcName).arg(QString::fromStdString(inputCoeffs)).arg(terms)
+        .arg(QString::fromStdString(task.expectedResult).left(40)));
+}
+
+// ==================== 刷新显示 ====================
 void MainWindow::refreshDisplay() {
-    // 左侧区块画布
     blockView->updateGeometry();
     blockView->resize(blockView->sizeHint());
     blockView->update();
 
-    // 右侧余额列表
     balanceList->clear();
-    for (const auto& pair : bc.balances) {
-        const std::string& addr = pair.first;
-        double bal = pair.second;
-        std::string name = addressToName(addr);
-        if (name.empty()) name = addr.substr(0, 12) + "...";
-        balanceList->addItem(QString("%1 : %2").arg(QString::fromStdString(name)).arg(bal, 0, 'f', 2));
+    for (const auto& p : bc.balances) {
+        std::string name = addressToName(p.first);
+        if (name.empty()) name = p.first.substr(0, 12) + "...";
+        balanceList->addItem(QString("%1 : %2").arg(QString::fromStdString(name)).arg(p.second, 0, 'f', 2));
     }
-
-    // NFT 列表（显示前 5 个）
     for (const auto& nft : bc.nftOwners) {
-        if (balanceList->count() < 20) { // 避免太拥挤
-            balanceList->addItem(QString("NFT[%1] → %2")
-                .arg(QString::fromStdString(nft.first).left(10))
-                .arg(QString::fromStdString(addressToName(nft.second))));
-        }
+        balanceList->addItem(QString("NFT[%1] → %2")
+            .arg(QString::fromStdString(nft.first).left(10))
+            .arg(QString::fromStdString(addressToName(nft.second))));
     }
 
-    // 质押信息
-    std::string youAddr = youWallet.getAddress();
-    double myStake = bc.stakes[youAddr];
+    double myStake = bc.stakes[youWallet.getAddress()];
     stakeInfoLabel->setText(QString("YOU Stake: %1 coins").arg(myStake, 0, 'f', 2));
-
-    // 销毁量
     burnedLabel->setText(QString("Total Burned: %1 coins").arg(bc.burnedCoins, 0, 'f', 4));
 
-    // 总供应量（余额 + 质押 + 已销毁）
     double totalSupply = 0.0;
     for (const auto& p : bc.balances) totalSupply += p.second;
-    for (const auto& p : bc.stakes)   totalSupply += p.second;
+    for (const auto& p : bc.stakes) totalSupply += p.second;
     totalSupply += bc.burnedCoins;
     totalSupplyLabel->setText(QString("Total Supply: %1 coins").arg(totalSupply, 0, 'f', 2));
+    int forkCount = bc.forks.size();
+    forkInfoLabel->setText(QString("Forks: %1 | Main chain: %2 blocks").arg(forkCount).arg(bc.chain.size()));
 }
 
-// ==================== 输入框样式 ====================
+// ==================== 辅助函数 ====================
 QString MainWindow::inputStyle() const {
     return "QLineEdit { background-color: #0d1117; border: 1px solid #30363d; border-radius: 6px;"
         "padding: 10px 12px; font-size: 13px; color: #c9d1d9; }"
         "QLineEdit:focus { border-color: #58a6ff; }";
 }
 
-// ==================== 名字 ↔ 地址转换 ====================
 std::string MainWindow::nameToAddress(const std::string& name) const {
     auto it = nameToAddr.find(name);
-    return (it != nameToAddr.end()) ? it->second : "";
+    return it != nameToAddr.end() ? it->second : "";
 }
 
 std::string MainWindow::addressToName(const std::string& addr) const {
     auto it = addrToName.find(addr);
-    return (it != addrToName.end()) ? it->second : "";
+    return it != addrToName.end() ? it->second : "";
 }

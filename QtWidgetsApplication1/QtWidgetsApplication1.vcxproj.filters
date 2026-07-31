@@ -52,12 +52,21 @@
     <ClCompile Include="p2pnetwork.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cpu_dispatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="blockchain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wallet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="poly_avx.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu_dispatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

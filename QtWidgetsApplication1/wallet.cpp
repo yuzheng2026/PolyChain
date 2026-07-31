@@ -46,7 +46,7 @@ static std::vector<unsigned char> evpDigest(const char* algorithm,
 }
 
 Wallet::Wallet() {
-    // 1. 创建密钥生成上下文
+    // 1. 生成密钥对
     EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr);
     if (!ctx) throw std::runtime_error("EVP_PKEY_CTX_new_id failed");
 
@@ -68,7 +68,7 @@ Wallet::Wallet() {
     pkey = static_cast<void*>(key);
     EVP_PKEY_CTX_free(ctx);
 
-    // 2. 提取原始公钥（64 字节，未压缩）
+    // 2. 提取原始公钥（64字节，未压缩）
     std::vector<unsigned char> rawPub(64);
     size_t len = 64;
     bool gotRaw = false;
@@ -92,11 +92,9 @@ Wallet::Wallet() {
             OPENSSL_free(xHex);
             OPENSSL_free(yHex);
 
-            // 补齐到 64 位十六进制（32 字节）
             while (xStr.length() < 64) xStr = "0" + xStr;
             while (yStr.length() < 64) yStr = "0" + yStr;
 
-            // 将十六进制转换为原始字节
             for (size_t i = 0; i < 32; ++i) {
                 rawPub[i] = static_cast<unsigned char>(std::strtoul(xStr.substr(i * 2, 2).c_str(), nullptr, 16));
                 rawPub[32 + i] = static_cast<unsigned char>(std::strtoul(yStr.substr(i * 2, 2).c_str(), nullptr, 16));

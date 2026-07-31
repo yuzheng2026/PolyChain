@@ -1,4 +1,3 @@
-#pragma once
 #ifndef BLOCKCHAINVIEW_H
 #define BLOCKCHAINVIEW_H
 
@@ -21,4 +20,4 @@ private:
     static const int VERTICAL_SPACING = 60;
 };
 
-#endif // BLOCKCHAINVIEW_H
+#endif
