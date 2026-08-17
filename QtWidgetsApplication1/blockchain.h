@@ -155,7 +155,7 @@ public:
 // ZKP 任务结构
 struct ZKPTask {
     std::string taskID, functionName, inputCoeffs, expectedResult, proverAddress, proof;
-    int terms;
+    int terms = 0;
 };
 
 // 区块链
@@ -167,7 +167,13 @@ public:
     double burnedCoins;
     std::map<std::string, std::string> nftOwners;
     std::vector<ZKPTask> zkpTasks;
+    // 验证者签名记录：validatorAddress -> (blockHeight -> blockHash)
+    std::map<std::string, std::map<int, std::string>> validatorSignatures;
+    // 罚没指定验证者一定比例的质押金（默认50%）
+    bool slashValidator(const std::string& validatorAddress, double slashPercent = 0.5);
 
+    // 检测双重签名，若检测到则自动罚没
+    void detectDoubleSigning(const std::string& validator, int height, const std::string& blockHash);
     static constexpr double MINING_REWARD = 10.0, STAKING_REWARD_RATE = 0.01, GAS_FEE_RATE = 0.005, ZKP_REWARD = 15.0;
 
     Blockchain() : difficulty(4), burnedCoins(0.0) {}
@@ -237,6 +243,7 @@ public:
     void setMainChain() {
         if (!chain.empty()) mainChainTip = chain.back().hash;
     }
+
     std::string generateZKPProof(const std::string& tid, const std::string& result) { return sha256(tid + result + "SALT"); }
     bool verifyZKPProof(const ZKPTask& t) { return t.proof == sha256(t.taskID + t.expectedResult + "SALT"); }
 
@@ -270,11 +277,31 @@ public:
     
 };
 
-constexpr double Blockchain::MINING_REWARD, Blockchain::STAKING_REWARD_RATE, Blockchain::GAS_FEE_RATE, Blockchain::ZKP_REWARD;
-
 #include "wallet.h"
 inline bool Blockchain::verifySignature(const std::string& pk, const std::string& data, const std::string& sig) {
     return Wallet::verifySignature(pk, data, sig);
+}
+// ===== 罚没功能实现 =====
+inline bool Blockchain::slashValidator(const std::string& validatorAddress, double slashPercent) {
+    auto stakeIt = stakes.find(validatorAddress);
+    if (stakeIt == stakes.end() || stakeIt->second <= 0) return false;
+    double slashedAmount = stakeIt->second * slashPercent;
+    stakes[validatorAddress] -= slashedAmount;
+    burnedCoins += slashedAmount;   // 罚没的币直接销毁
+    return true;
+}
+
+inline void Blockchain::detectDoubleSigning(const std::string& validator, int height, const std::string& blockHash) {
+    auto& sigMap = validatorSignatures[validator];
+    auto it = sigMap.find(height);
+    if (it != sigMap.end() && it->second != blockHash) {
+        // 发现双重签名，罚没50%
+        slashValidator(validator, 0.5);
+        // 可以在此添加日志或事件，但当前简化为直接执行
+    }
+    else {
+        sigMap[height] = blockHash;
+    }
 }
 // ===== processBlock 实现 =====
 inline bool Blockchain::processBlock(const Block& block) {

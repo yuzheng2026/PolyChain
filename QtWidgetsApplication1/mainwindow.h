@@ -22,6 +22,7 @@ public:
     ~MainWindow() {}
 
 private slots:
+    void simulateDoubleSign();
     void sendTransaction();
     void onDifficultyChanged(int value);
     void mineBlock();
@@ -52,7 +53,7 @@ private:
     QLabel* forkInfoLabel;
     QPushButton* stakeBtn, * unstakeBtn, * mineBtn, * mintBtn, * transferNFTBtn;
     QPushButton* connectBtn, * zkpTaskBtn;
-
+    QPushButton* slashBtn;   // 模拟双重签名按钮
     Blockchain      bc;
     Wallet          aliceWallet, bobWallet, eveWallet, youWallet;
     P2PNetwork* p2p;

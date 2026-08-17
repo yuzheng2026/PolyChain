@@ -226,7 +226,17 @@ aliceWallet(), bobWallet(), eveWallet(), youWallet()
         "QPushButton:hover { background-color: #f85149; }");
     connect(unstakeBtn, &QPushButton::clicked, this, &MainWindow::unstakeCoins);
     rightLayout->addWidget(unstakeBtn);
-
+    // 模拟双重签名按钮（罚没演示）
+    rightLayout->addSpacing(8);
+    slashBtn = new QPushButton("SIMULATE DOUBLE SIGN");
+    slashBtn->setCursor(Qt::PointingHandCursor);
+    slashBtn->setStyleSheet(
+        "QPushButton { background-color: #da3633; color: white; border: none;"
+        "border-radius: 6px; padding: 12px 24px; font-size: 13px; font-weight: bold; }"
+        "QPushButton:hover { background-color: #f85149; }"
+        "QPushButton:pressed { background-color: #b62324; }");
+    connect(slashBtn, &QPushButton::clicked, this, &MainWindow::simulateDoubleSign);
+    rightLayout->addWidget(slashBtn);
     // 余额面板
     rightLayout->addSpacing(16);
     QLabel* balanceTitle = new QLabel("ACCOUNT BALANCES");
@@ -551,4 +561,23 @@ std::string MainWindow::nameToAddress(const std::string& name) const {
 std::string MainWindow::addressToName(const std::string& addr) const {
     auto it = addrToName.find(addr);
     return it != addrToName.end() ? it->second : "";
+}
+void MainWindow::simulateDoubleSign() {
+    std::string youAddr = youWallet.getAddress();
+    if (bc.stakes[youAddr] <= 0) {
+        QMessageBox::warning(this, "No Stake", "YOU have no stake to slash.");
+        return;
+    }
+
+    // 模拟在相同区块高度对两个不同区块签名
+    int currentHeight = bc.chain.size(); // 简化为当前链长度作为高度
+    bc.detectDoubleSigning(youAddr, currentHeight, "fake_block_hash_1");
+    bc.detectDoubleSigning(youAddr, currentHeight, "fake_block_hash_2");
+
+    refreshDisplay();
+    QMessageBox::information(this, "Slashing",
+        QString("YOU have been slashed 50%% of your stake!\n"
+            "Remaining stake: %1 coins\n"
+            "Total burned increased by slashed amount.")
+        .arg(bc.stakes[youAddr], 0, 'f', 2));
 }
