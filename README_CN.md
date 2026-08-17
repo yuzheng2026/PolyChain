@@ -5,10 +5,13 @@
 [![GitHub issues](https://img.shields.io/github/issues/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/issues)
 [![GitHub forks](https://img.shields.io/github/forks/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/network/members)
 [![CI](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml/badge.svg)](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml)
+[![Qt 6.11.1](https://img.shields.io/badge/Qt-6.11.1-green?logo=qt)](https://www.qt.io/)
 
 **English Version**: [README.md](README.md)
 
 一个基于 **Qt 6** 和 **C++17** 的功能丰富的区块链模拟器，展示了区块链的核心概念，并集成了 **PolyAVX** 高性能多项式库，用于实现“有用工作量证明（PoUW）”任务。本项目使用 [PolyAVX](https://github.com/yuzheng2026/PolyAVX) 作为高性能多项式计算引擎。
+### 注意
+- 这个项目依赖**Qt 6.11.1 (MSVC 2022 64-bit)** – GUI 框架（Widgets, Network）
 
 本项目面向教学目的，也可作为探索高级共识机制、数字资产和点对点网络的起点。
 
