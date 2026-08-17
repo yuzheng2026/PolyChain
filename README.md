@@ -5,6 +5,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/issues)
 [![GitHub forks](https://img.shields.io/github/forks/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/network/members)
 [![CI](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml/badge.svg)](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml)
+[![Qt 6.11.1](https://img.shields.io/badge/Qt-6.11.1-green?logo=qt)](https://www.qt.io/)
 
 **中文版**：[README_CN.md](README_CN.md)
 
