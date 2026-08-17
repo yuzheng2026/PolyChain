@@ -149,6 +149,7 @@ QtWidgetsApplication1/
 - **DeepSeek AI** 在代码生成、调试和设计方面提供了帮助。
 - **PolyAVX** 项目提供了用于 ZKP 任务的高性能多项式引擎。
 - **Qt** 和 **OpenSSL** 社区提供了基础库。
+-- [Qt 官方网站](https://www.qt.io/)
 
 ---
 
