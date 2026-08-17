@@ -63,7 +63,7 @@ PolyChain/
 
 - **Qt 6** (Widgets, Network) – tested with **Qt 6.11.1 (msvc2022_64)**
 - **OpenSSL 3.x** (EVP API)
-- **PolyAVX** – your high‑performance polynomial library
+- **PolyAVX** – my high‑performance polynomial library
 - **Visual Studio 2022/2026** with MSVC v143/v144/v145 toolset (binary compatible)
 
 ## Build Instructions
@@ -147,7 +147,7 @@ See the `LICENSE` file for details.
 ## Acknowledgements
 
 - **DeepSeek AI** for assistance in code generation, debugging, and design.
-- **PolyAVX** – my high‑performance polynomial library, used as the scientific computing engine in this project.
+- **PolyAVX** – my own high‑performance polynomial library, used as the scientific computing engine in this project.
 - **Qt** and **OpenSSL** communities for the foundational libraries.
 -- - [Qt Official Website](https://www.qt.io/)
 
