@@ -10,8 +10,6 @@
 **English Version**: [README.md](README.md)
 
 一个基于 **Qt 6** 和 **C++17** 的功能丰富的区块链模拟器，展示了区块链的核心概念，并集成了 **PolyAVX** 高性能多项式库，用于实现“有用工作量证明（PoUW）”任务。本项目使用 [PolyAVX](https://github.com/yuzheng2026/PolyAVX) 作为高性能多项式计算引擎。
-### 注意
-- 这个项目依赖**Qt 6.11.1 (MSVC 2022 64-bit)** – GUI 框架（Widgets, Network）
 
 本项目面向教学目的，也可作为探索高级共识机制、数字资产和点对点网络的起点。
 
@@ -66,7 +64,7 @@ QtWidgetsApplication1/
 - **Qt 6**（Widgets、Network）– 已在 Qt 6.11.1（msvc2022_64）上测试
 - **OpenSSL 3.x**（EVP API）
 - **PolyAVX** – 你的高性能多项式库
-- **Visual Studio 2022/2026**，使用 MSVC v143/v145 工具集（二进制兼容）
+- **Visual Studio 2022/2026**，使用 MSVC v143/v144/v145 工具集（二进制兼容）
 
 ## 构建说明
 
