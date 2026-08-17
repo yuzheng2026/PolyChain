@@ -9,7 +9,7 @@
 
 **English Version**: [README.md](README.md)
 
-一个基于 **Qt 6** 和 **C++17** 的功能丰富的区块链模拟器，展示了区块链的核心概念，并集成了 **PolyAVX** 高性能多项式库，用于实现“有用工作量证明（PoUW）”任务。本项目使用PolyAVX作为高性能多项式计算引擎。> **作者说明：** PolyChain 与 [PolyAVX](https://github.com/yuzheng2026/PolyAVX) 均由 **yuzheng2026** 开发和维护。PolyChain 使用 PolyAVX 作为有用工作量证明任务的科学计算引擎。
+一个基于 **Qt 6** 和 **C++17** 的功能丰富的区块链模拟器，展示了区块链的核心概念，并集成了 **PolyAVX** 高性能多项式库，用于实现“有用工作量证明（PoUW）”任务。本项目使用PolyAVX作为高性能多项式计算引擎。**作者说明：** PolyChain 与 [PolyAVX](https://github.com/yuzheng2026/PolyAVX) 均由 **yuzheng2026** 开发和维护。PolyChain 使用 PolyAVX 作为有用工作量证明任务的科学计算引擎。
 
 本项目面向教学目的，也可作为探索高级共识机制、数字资产和点对点网络的起点。
 
