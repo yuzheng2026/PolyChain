@@ -3,6 +3,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/issues)
 [![GitHub forks](https://img.shields.io/github/forks/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/network/members)
 [![CI](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml/badge.svg)](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml)
+
 **中文版**：[README_CN.md](README_CN.md)
 # PolyChain – Blockchain Simulator with PolyAVX Integration
 
