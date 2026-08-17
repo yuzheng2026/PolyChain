@@ -147,7 +147,7 @@ See the `LICENSE` file for details.
 ## Acknowledgements
 
 - **DeepSeek AI** for assistance in code generation, debugging, and design.
-- **PolyAVX** project for providing the high‑performance polynomial engine used in ZKP tasks.
+- **PolyAVX** – my own high‑performance polynomial library, used as the scientific computing engine in this project.
 - **Qt** and **OpenSSL** communities for the foundational libraries.
 -- - [Qt Official Website](https://www.qt.io/)
 
