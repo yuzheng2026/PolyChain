@@ -1,3 +1,5 @@
+# PolyChain – Blockchain Simulator with PolyAVX Integration
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/issues)
@@ -5,7 +7,6 @@
 [![CI](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml/badge.svg)](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml)
 
 **中文版**：[README_CN.md](README_CN.md)
-# PolyChain – Blockchain Simulator with PolyAVX Integration
 
 A feature‑rich blockchain simulator built with **Qt 6** and **C++17** that demonstrates core blockchain concepts while integrating the **PolyAVX** high‑performance polynomial library for Proof‑of‑Useful‑Work (PoUW) tasks.This project is powered by [PolyAVX](https://github.com/yuzheng2026/PolyAVX), a high‑performance polynomial library.
 
