@@ -61,7 +61,7 @@ PolyChain/
 ```
 ## Dependencies
 
-- **Qt 6** (Widgets, Network) – tested with Qt 6.11.1 (msvc2022_64)
+- **Qt 6** (Widgets, Network) – tested with **Qt 6.11.1 (msvc2022_64)**
 - **OpenSSL 3.x** (EVP API)
 - **PolyAVX** – your high‑performance polynomial library
 - **Visual Studio 2022/2026** with MSVC v143/v144/v145 toolset (binary compatible)
