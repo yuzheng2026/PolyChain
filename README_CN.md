@@ -63,7 +63,7 @@ QtWidgetsApplication1/
 
 - **Qt 6**（Widgets、Network）– 已在 Qt 6.11.1（msvc2022_64）上测试
 - **OpenSSL 3.x**（EVP API）
-- **PolyAVX** – 你的高性能多项式库
+- **PolyAVX** – 我的高性能多项式库
 - **Visual Studio 2022/2026**，使用 MSVC v143/v144/v145 工具集（二进制兼容）
 
 ## 构建说明
