@@ -46,7 +46,7 @@
 ## 架构
 
 项目结构如下：
-
+···text
 QtWidgetsApplication1/
 ├── blockchain.h          # 核心区块链数据结构和逻辑
 ├── wallet.h / .cpp       # 使用 OpenSSL EVP 的钱包实现
@@ -55,6 +55,7 @@ QtWidgetsApplication1/
 ├── mainwindow.h / .cpp   # 主 GUI 和所有用户交互
 ├── main.cpp              # 应用程序入口
 └── poly_avx.hpp          # PolyAVX 库（用于 ZKP 任务）
+```
 
 ## 依赖
 
