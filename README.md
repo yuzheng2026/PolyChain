@@ -7,7 +7,7 @@
 **中文版**：[README_CN.md](README_CN.md)
 # PolyChain – Blockchain Simulator with PolyAVX Integration
 
-A feature‑rich blockchain simulator built with **Qt 6** and **C++17** that demonstrates core blockchain concepts while integrating the **PolyAVX** high‑performance polynomial library for Proof‑of‑Useful‑Work (PoUW) tasks.
+A feature‑rich blockchain simulator built with **Qt 6** and **C++17** that demonstrates core blockchain concepts while integrating the **PolyAVX** high‑performance polynomial library for Proof‑of‑Useful‑Work (PoUW) tasks.This project is powered by [PolyAVX](https://github.com/yuzheng2026/PolyAVX), a high‑performance polynomial library.
 
 This project is designed for educational purposes and as a foundation for exploring advanced consensus mechanisms, digital assets, and peer‑to‑peer networking.
 
