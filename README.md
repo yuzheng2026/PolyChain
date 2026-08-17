@@ -47,6 +47,7 @@ This project is designed for educational purposes and as a foundation for explor
 
 The project is structured as follows:
 
+```text
 PolyChain/
 ├── blockchain.h          # Core blockchain data structures and logic
 ├── wallet.h / .cpp       # Wallet implementation using OpenSSL EVP
@@ -55,7 +56,7 @@ PolyChain/
 ├── mainwindow.h / .cpp   # Main GUI and all user interactions
 ├── main.cpp              # Application entry point
 └── poly_avx.hpp          # PolyAVX library (imported for ZKP tasks)
-
+```
 ## Dependencies
 
 - **Qt 6** (Widgets, Network) – tested with Qt 6.11.1 (msvc2022_64)
