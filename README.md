@@ -149,6 +149,7 @@ See the `LICENSE` file for details.
 - **DeepSeek AI** for assistance in code generation, debugging, and design.
 - **PolyAVX** project for providing the high‑performance polynomial engine used in ZKP tasks.
 - **Qt** and **OpenSSL** communities for the foundational libraries.
+-- [Qt 官方网站](https://www.qt.io/)
 
 ---
 
