@@ -46,7 +46,7 @@
 ## 架构
 
 项目结构如下：
-···text
+```text
 QtWidgetsApplication1/
 ├── blockchain.h          # 核心区块链数据结构和逻辑
 ├── wallet.h / .cpp       # 使用 OpenSSL EVP 的钱包实现
