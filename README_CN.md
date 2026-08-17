@@ -1,3 +1,8 @@
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/issues)
+[![GitHub forks](https://img.shields.io/github/forks/yuzheng2026/QtWidgetsApplication1)](https://github.com/yuzheng2026/QtWidgetsApplication1/network/members)
+[![CI](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml/badge.svg)](https://github.com/yuzheng2026/QtWidgetsApplication1/actions/workflows/ci.yml)
 # PolyChain – 集成 PolyAVX 的区块链模拟器
 
 一个基于 **Qt 6** 和 **C++17** 的功能丰富的区块链模拟器，展示了区块链的核心概念，并集成了 **PolyAVX** 高性能多项式库，用于实现“有用工作量证明（PoUW）”任务。
