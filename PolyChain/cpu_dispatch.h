@@ -1,4 +1,5 @@
 // cpu_dispatch.h – CPU 特性检测与动态调度 (C++98 兼容)
+#pragma once
 #ifndef CPU_DISPATCH_H
 #define CPU_DISPATCH_H
 
