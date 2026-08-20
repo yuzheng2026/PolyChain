@@ -533,7 +533,8 @@ namespace poly_avx {
 		PolyD A2 = (A * A).trunc(n);
 		PolyD integrand = (A.deriv() * (one + A2).sqrt(n).inv(n)).trunc(n - 1);
 		PolyD res = integrand.integ().trunc(n);
-		res.data[0] = std::asinh(A[0]);
+		double a0 = A.data[0];
+		res.data[0] = std::log(a0 + std::sqrt(a0 * a0 + 1.0));
 		return res;
 	}
 	
@@ -564,7 +565,8 @@ namespace poly_avx {
 		PolyD den = one - A2;
 		PolyD integrand = (A.deriv() * den.inv(n)).trunc(n - 1);
 		PolyD res = integrand.integ().trunc(n);
-		res.data[0] = std::atanh(A[0]);
+		double a0 = A[0];
+		res.data[0] = 0.5 * std::log((1.0 + a0) / (1.0 - a0));
 		return res;
 	}
 	
