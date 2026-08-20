@@ -99,7 +99,7 @@ PolyChain/
 - Build the solution.
 - To run a single node:
   ```powershell
-  .\x64\Release\QtWidgetsApplication1.exe 12345
+  .\x64\Release\main.exe 12345
   ```
   (The argument specifies the listening port; default is 12345.)
 
@@ -109,12 +109,12 @@ You can run two instances on the same machine to simulate a peer‑to‑peer net
 
 1. Start the first node:
    ```powershell
-   .\QtWidgetsApplication1.exe 12345
+   .\main.exe 12345
    ```
 
 2. Start the second node in a new PowerShell window:
    ```powershell
-   .\QtWidgetsApplication1.exe 12346
+   .\main.exe 12346
    ```
 
 3. In the second node, click **CONNECT TO PEER** and enter:
